@@ -7,7 +7,7 @@ class BluetoothViewModel: NSObject, ObservableObject {
     private var motorCharacteristic: CBCharacteristic?
     
     @Published var isConnected = false
-    @Published var receivedData: String = ""  // Store the raw string data
+    @Published var receivedData: String = ""
 
     let serviceUUID = CBUUID(string: "4fafc201-1fb5-459e-8fcc-c5c9c331914b")
     let characteristicUUID = CBUUID(string: "beb5483e-36e1-4688-b7f5-ea07361b26a8")
@@ -31,12 +31,16 @@ class BluetoothViewModel: NSObject, ObservableObject {
 extension BluetoothViewModel: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state == .poweredOn {
+            print("Bluetooth is powered on. Scanning for ESP32...")
             self.centralManager?.scanForPeripherals(withServices: [serviceUUID])
+        } else {
+            print("Bluetooth is not available.")
         }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         if esp32Peripheral == nil {
+            print("ESP32 found. Connecting...")
             esp32Peripheral = peripheral
             esp32Peripheral?.delegate = self
             centralManager?.stopScan()
@@ -46,7 +50,7 @@ extension BluetoothViewModel: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         DispatchQueue.main.async {
-            print("Connected to ESP32")
+            print("Connected to ESP32!")
             self.isConnected = true
         }
         peripheral.discoverServices([serviceUUID])
@@ -57,6 +61,7 @@ extension BluetoothViewModel: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { return }
         for service in services where service.uuid == serviceUUID {
+            print("Service found. Discovering characteristics...")
             peripheral.discoverCharacteristics([characteristicUUID], for: service)
         }
     }
@@ -66,19 +71,22 @@ extension BluetoothViewModel: CBPeripheralDelegate {
         for characteristic in characteristics where characteristic.uuid == characteristicUUID {
             motorCharacteristic = characteristic
             print("Characteristic found!")
+
+            // Enable notifications
+            if characteristic.properties.contains(.notify) {
+                peripheral.setNotifyValue(true, for: characteristic)
+                print("Subscribed to notifications!")
+            }
         }
     }
 
-    // This is where we handle the data being received
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        if characteristic.uuid == characteristicUUID {
-            if let data = characteristic.value {
-                if let stringData = String(data: data, encoding: .utf8) {
-                    DispatchQueue.main.async {
-                        self.receivedData = stringData  // Store the raw string data
-                        print("Received data: \(self.receivedData)")  // Print to console
-                    }
-                }
+        if characteristic.uuid == characteristicUUID, let data = characteristic.value {
+            let stringData = String(data: data, encoding: .utf8) ?? "Unreadable Data"
+            DispatchQueue.main.async {
+                self.receivedData = stringData
+                print("Received raw data: \(data)")
+                print("Received string data: \(stringData)")
             }
         }
     }
@@ -113,7 +121,7 @@ struct ContentView: View {
 
             // Display the received string
             VStack {
-                Text("Received Data: \(bluetoothViewModel.receivedData)")  // Display the raw string
+                Text("Received Data: \(bluetoothViewModel.receivedData)")
                     .font(.body)
                     .padding()
             }
