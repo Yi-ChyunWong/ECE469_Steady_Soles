@@ -8,7 +8,6 @@ import SwiftUI
 
 struct CalibrationView: View {
     @ObservedObject var bluetoothViewModel: BluetoothViewModel
-    //@State private var isCalibrating = false
     @State private var calibrationCountdown = 5
     @State private var calibrated = false
 
@@ -19,6 +18,13 @@ struct CalibrationView: View {
 
             if calibrated {
                 Text("✅ Calibration complete")
+                if let maxValues = bluetoothViewModel.calibratedMaxValues {
+                    Text("Max Values: \n\(maxValues.map { String(format: "%.2f", $0) }.joined(separator: ", "))")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                }
             } else if bluetoothViewModel.isCalibrating {
                 Text("Calibrating... \(calibrationCountdown)")
             } else {

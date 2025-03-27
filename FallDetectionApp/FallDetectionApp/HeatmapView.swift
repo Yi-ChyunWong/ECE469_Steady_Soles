@@ -82,10 +82,21 @@ extension Color {
     init(heatValue: CGFloat) {
         let clamped = min(max(heatValue, 0.0), 1.0)
 
-        // Blue (0,0,1) → Purple (0.5,0,0.5) → Red (1,0,0)
-        let red = clamped < 0.5 ? clamped * 2.0 : 1.0
-        let blue = clamped < 0.5 ? 1.0 : 2.0 * (1.0 - clamped)
-        let green: CGFloat = 0.0
+        let red: CGFloat
+        let green: CGFloat
+        let blue: CGFloat
+
+        if clamped < 0.5 {
+            // From blue (0,0,1) to purple (0.5,0,0.5)
+            red = clamped * 1.0        // 0 → 0.5
+            green = 0
+            blue = 1.0 - red           // 1 → 0.5
+        } else {
+            // From purple (0.5,0,0.5) to red (1,0,0)
+            red = 0.5 + (clamped - 0.5) * 1.0   // 0.5 → 1.0
+            green = 0
+            blue = 0.5 - (clamped - 0.5) * 1.0  // 0.5 → 0
+        }
 
         self = Color(red: red, green: green, blue: blue)
     }

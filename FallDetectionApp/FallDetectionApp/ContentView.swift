@@ -40,6 +40,13 @@ struct ContentView: View {
                         .padding(.horizontal, 8)
                     )
                     .padding(.top)
+                    if let message = bluetoothViewModel.detectedFallMessage {
+                        Text(message)
+                            .font(.title2)
+                            .foregroundColor(.red)
+                            .bold()
+                            .padding()
+                    }
                 } else {
                     Text("Waiting for sensor data...")
                         .padding()
