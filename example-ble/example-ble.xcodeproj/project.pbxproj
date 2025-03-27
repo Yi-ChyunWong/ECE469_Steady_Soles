@@ -10,9 +10,22 @@
 		36B5A9262D7158CB00699BF5 /* example-ble.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "example-ble.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		36637B9B2D94B3C300140A21 /* Exceptions for "example-ble" folder in "example-ble" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 36B5A9252D7158CB00699BF5 /* example-ble */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		36B5A9282D7158CB00699BF5 /* example-ble */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				36637B9B2D94B3C300140A21 /* Exceptions for "example-ble" folder in "example-ble" target */,
+			);
 			path = "example-ble";
 			sourceTree = "<group>";
 		};
@@ -255,6 +268,7 @@
 				DEVELOPMENT_TEAM = WDW2GW5UPF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "example-ble/Info.plist";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Using bleutotoh plaease";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "using bluetotth periopheral";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -286,6 +300,7 @@
 				DEVELOPMENT_TEAM = WDW2GW5UPF;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "example-ble/Info.plist";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Using bleutotoh plaease";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "using bluetotth periopheral";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
