@@ -11,7 +11,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		36637B9B2D94B3C300140A21 /* Exceptions for "example-ble" folder in "example-ble" target */ = {
+		C67074BE2D95AD4500960885 /* Exceptions for "example-ble" folder in "example-ble" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -24,7 +24,7 @@
 		36B5A9282D7158CB00699BF5 /* example-ble */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				36637B9B2D94B3C300140A21 /* Exceptions for "example-ble" folder in "example-ble" target */,
+				C67074BE2D95AD4500960885 /* Exceptions for "example-ble" folder in "example-ble" target */,
 			);
 			path = "example-ble";
 			sourceTree = "<group>";
@@ -265,10 +265,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"example-ble/Preview Content\"";
-				DEVELOPMENT_TEAM = WDW2GW5UPF;
+				DEVELOPMENT_TEAM = 69P3V9K2T4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "example-ble/Info.plist";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Using bleutotoh plaease";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "using bluetotth periopheral";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -281,7 +280,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rlarkdfus1234.example-ble";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.teamseven.example-ble";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -297,10 +296,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"example-ble/Preview Content\"";
-				DEVELOPMENT_TEAM = WDW2GW5UPF;
+				DEVELOPMENT_TEAM = 69P3V9K2T4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "example-ble/Info.plist";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Using bleutotoh plaease";
 				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "using bluetotth periopheral";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -313,7 +311,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.rlarkdfus1234.example-ble";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.teamseven.example-ble";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

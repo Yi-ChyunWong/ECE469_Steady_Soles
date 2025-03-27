@@ -66,7 +66,10 @@ class BluetoothViewModel: NSObject, ObservableObject {
 //    }
     
     func parsePressureData(_ raw: String) -> SensorData? {
-        let components = raw.components(separatedBy: ",")
+        //let components = raw.components(separatedBy: ",")
+        let cleaned = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                .trimmingCharacters(in: CharacterSet(charactersIn: ","))
+        let components = cleaned.components(separatedBy: ",")
         guard components.count == 8 else { return nil }
 
         // Normalize values from 0–2000 to 0.0–1.0
@@ -82,6 +85,11 @@ class BluetoothViewModel: NSObject, ObservableObject {
     }
 
     func appendSensorData(_ data: SensorData) {
+        print("📥 Appending sensor data: \(data.pressures)")
+        if isCalibrating {
+            calibrationBuffer.append(data.pressures)
+            print("Calibrating – Appended: \(data.pressures)")
+        }
         sensorHistory.append(data)
         if sensorHistory.count > 1000 {
             sensorHistory.removeFirst()
@@ -93,10 +101,14 @@ class BluetoothViewModel: NSObject, ObservableObject {
     func clearCalibration() {
         calibrationBuffer.removeAll()
         isCalibrating = true
+        sendCommand("ON")
     }
 
     func finalizeCalibration() {
-        guard !calibrationBuffer.isEmpty else { return }
+        guard !calibrationBuffer.isEmpty else {
+            print("Calibration buffer is empty — no data to finalize")
+            return
+        }
         let sensorCount = calibrationBuffer[0].count
         var maxValues = [CGFloat](repeating: 0, count: sensorCount)
 
@@ -192,12 +204,16 @@ class BluetoothViewModel: NSObject, ObservableObject {
 extension BluetoothViewModel: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state == .poweredOn {
+            print("Bluetooth is powered on. Scanning for ESP32...")
             self.centralManager?.scanForPeripherals(withServices: [serviceUUID])
+        } else {
+            print("Bluetooth is not available.")
         }
     }
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         if esp32Peripheral == nil {
+            print("ESP32 found. Connecting...")
             esp32Peripheral = peripheral
             esp32Peripheral?.delegate = self
             centralManager?.stopScan()
@@ -207,7 +223,7 @@ extension BluetoothViewModel: CBCentralManagerDelegate {
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         DispatchQueue.main.async {
-            print("Connected to ESP32")
+            print("Connected to ESP32!")
             self.isConnected = true
         }
         peripheral.discoverServices([serviceUUID])
@@ -218,6 +234,7 @@ extension BluetoothViewModel: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { return }
         for service in services where service.uuid == serviceUUID {
+            print("Service found. Discovering characteristics...")
             peripheral.discoverCharacteristics([characteristicUUID], for: service)
         }
     }
@@ -227,18 +244,28 @@ extension BluetoothViewModel: CBPeripheralDelegate {
         for characteristic in characteristics where characteristic.uuid == characteristicUUID {
             motorCharacteristic = characteristic
             print("Characteristic found!")
+
+            // Enable notifications
+            if characteristic.properties.contains(.notify) {
+                peripheral.setNotifyValue(true, for: characteristic)
+                print("Subscribed to notifications!")
+            }
         }
     }
 
-    // This is where we handle the data being received
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        if characteristic.uuid == characteristicUUID {
-            if let data = characteristic.value {
-                if let stringData = String(data: data, encoding: .utf8) {
-                    DispatchQueue.main.async {
-                        self.receivedData = stringData  // Store the raw string data
-                        print("Received data: \(self.receivedData)")  // Print to console
-                    }
+        if characteristic.uuid == characteristicUUID, let data = characteristic.value {
+            let stringData = String(data: data, encoding: .utf8) ?? "Unreadable Data"
+            DispatchQueue.main.async {
+                self.receivedData = stringData
+                print("Received raw data: \(data)")
+                print("Received string data: \(stringData)")
+                let arrayData = self.parsePressureData(stringData)
+                if let sensor = arrayData {
+                    print("Parsed sensor data: \(sensor)")
+                    self.appendSensorData(sensor)
+                } else {
+                    print("⚠️ parsePressureData returned nil for string: \(stringData)")
                 }
             }
         }

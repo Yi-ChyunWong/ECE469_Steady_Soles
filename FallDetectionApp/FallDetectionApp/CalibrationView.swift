@@ -8,8 +8,8 @@ import SwiftUI
 
 struct CalibrationView: View {
     @ObservedObject var bluetoothViewModel: BluetoothViewModel
-    @State private var isCalibrating = false
-    @State private var calibrationCountdown = 3
+    //@State private var isCalibrating = false
+    @State private var calibrationCountdown = 5
     @State private var calibrated = false
 
     var body: some View {
@@ -19,16 +19,16 @@ struct CalibrationView: View {
 
             if calibrated {
                 Text("✅ Calibration complete")
-            } else if isCalibrating {
+            } else if bluetoothViewModel.isCalibrating {
                 Text("Calibrating... \(calibrationCountdown)")
             } else {
-                Text("Press start and stand still for 3 seconds.")
+                Text("Press start and stand still for 5 seconds.")
             }
 
             Button("Start Calibration") {
                 startCalibration()
             }
-            .disabled(isCalibrating)
+            .disabled(bluetoothViewModel.isCalibrating)
             .padding()
             .background(Color.orange)
             .foregroundColor(.white)
@@ -38,9 +38,9 @@ struct CalibrationView: View {
     }
 
     func startCalibration() {
-        isCalibrating = true
+        bluetoothViewModel.isCalibrating = true
         calibrated = false
-        calibrationCountdown = 3
+        calibrationCountdown = 5
         bluetoothViewModel.clearCalibration()
 
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
@@ -48,7 +48,7 @@ struct CalibrationView: View {
                 calibrationCountdown -= 1
             } else {
                 timer.invalidate()
-                isCalibrating = false
+                bluetoothViewModel.isCalibrating = false
                 calibrated = true
                 bluetoothViewModel.finalizeCalibration()
             }
