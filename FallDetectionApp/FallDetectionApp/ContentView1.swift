@@ -9,7 +9,7 @@ import CoreBluetooth
 import Accelerate
 
 // Stuck on Calibration Page
-struct ContentView: View {
+struct ContentView1: View {
     @ObservedObject var bluetoothViewModel = BluetoothViewModel()
 
     var body: some View {
@@ -94,5 +94,5 @@ struct ContentView: View {
 
 
 #Preview {
-    ContentView()
+    ContentView1()
 }

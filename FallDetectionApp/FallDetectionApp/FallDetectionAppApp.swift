@@ -10,7 +10,7 @@ import SwiftUI
 struct FallDetectionAppApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView1()
         }
     }
 }

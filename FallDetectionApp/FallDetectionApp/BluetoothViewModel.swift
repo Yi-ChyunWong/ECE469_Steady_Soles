@@ -157,67 +157,67 @@ class BluetoothViewModel: NSObject, ObservableObject {
 //    }
 
     //No slope lean detection
-//    func autoRunFallDetection() {
-//        guard let maxValues = calibratedMaxValues else { return }
-//        guard let current = sensorHistory.last?.pressures else { return }
-//
-//        let toeIndices = [0, 1]
-//        let heelIndices = [6, 7]
-//
-//        // Thresholds to detect leans
-//        let toePressed = toeIndices.contains { current[$0] > maxValues[$0] * 0.6 }
-//        let heelDropped = heelIndices.contains { current[$0] < maxValues[$0] * 0.4 }
-//
-//        let heelPressed = heelIndices.contains { current[$0] > maxValues[$0] * 0.6 }
-//        let toeDropped = toeIndices.contains { current[$0] < maxValues[$0] * 0.4 }
-//
-//        if toePressed && heelDropped {
-//            detectedFallMessage = "🚨 Forward Lean Detected"
-//            triggerAlertFeedback()
-//            autoClearFallMessage()
-//        } else if heelPressed && toeDropped {
-//            detectedFallMessage = "🚨 Backward Lean Detected"
-//            triggerAlertFeedback()
-//            autoClearFallMessage()
-//        }
-//    }
-
-    // Slope detection but too fluctuating
     func autoRunFallDetection() {
         guard let maxValues = calibratedMaxValues else { return }
-        guard sensorHistory.count > 20 else { return }
+        guard let current = sensorHistory.last?.pressures else { return }
 
-        let current = sensorHistory.last!.pressures
         let toeIndices = [0, 1]
         let heelIndices = [6, 7]
 
-        // Use slope of toe and heel zones
-        let heelPressures = sensorHistory.map { Double($0.pressures[6] + $0.pressures[7]) / 2.0 }
-        let toePressures = sensorHistory.map { Double($0.pressures[0] + $0.pressures[1]) / 2.0 }
-
-        let smoothedHeel = savitzkyGolaySmooth(values: heelPressures, windowSize: 11, polynomialOrder: 2)
-        let smoothedToe = savitzkyGolaySmooth(values: toePressures, windowSize: 11, polynomialOrder: 2)
-
-        let heelSlope = computeSlopes(values: smoothedHeel).last ?? 0
-        let toeSlope = computeSlopes(values: smoothedToe).last ?? 0
-
-        // Check for trend: toe increasing, heel decreasing = forward lean
-        let isLeaningForward = toeSlope > 0.02 && heelSlope < -0.02
-        let isLeaningBackward = heelSlope > 0.02 && toeSlope < -0.02
-
-        let toeDropped = toeIndices.contains { current[$0] < maxValues[$0] * 0.4 }
+        // Thresholds to detect leans
+        let toePressed = toeIndices.contains { current[$0] > maxValues[$0] * 0.6 }
         let heelDropped = heelIndices.contains { current[$0] < maxValues[$0] * 0.4 }
 
-        if isLeaningForward && heelDropped {
+        let heelPressed = heelIndices.contains { current[$0] > maxValues[$0] * 0.8 }
+        let toeDropped = toeIndices.contains { current[$0] < maxValues[$0] * 0.4 }
+
+        if toePressed && heelDropped {
             detectedFallMessage = "🚨 Forward Lean Detected"
             triggerAlertFeedback()
             autoClearFallMessage()
-        } else if isLeaningBackward && toeDropped {
+        } else if heelPressed && toeDropped {
             detectedFallMessage = "🚨 Backward Lean Detected"
             triggerAlertFeedback()
             autoClearFallMessage()
         }
     }
+
+    // Slope detection but too fluctuating
+//    func autoRunFallDetection() {
+//        guard let maxValues = calibratedMaxValues else { return }
+//        guard sensorHistory.count > 20 else { return }
+//
+//        let current = sensorHistory.last!.pressures
+//        let toeIndices = [0, 1]
+//        let heelIndices = [6, 7]
+//
+//        // Use slope of toe and heel zones
+//        let heelPressures = sensorHistory.map { Double($0.pressures[6] + $0.pressures[7]) / 2.0 }
+//        let toePressures = sensorHistory.map { Double($0.pressures[0] + $0.pressures[1]) / 2.0 }
+//
+//        let smoothedHeel = savitzkyGolaySmooth(values: heelPressures, windowSize: 11, polynomialOrder: 2)
+//        let smoothedToe = savitzkyGolaySmooth(values: toePressures, windowSize: 11, polynomialOrder: 2)
+//
+//        let heelSlope = computeSlopes(values: smoothedHeel).last ?? 0
+//        let toeSlope = computeSlopes(values: smoothedToe).last ?? 0
+//
+//        // Check for trend: toe increasing, heel decreasing = forward lean
+//        let isLeaningForward = toeSlope > 0.02 && heelSlope < -0.02
+//        let isLeaningBackward = heelSlope > 0.02 && toeSlope < -0.02
+//
+//        let toeDropped = toeIndices.contains { current[$0] < maxValues[$0] * 0.4 }
+//        let heelDropped = heelIndices.contains { current[$0] < maxValues[$0] * 0.4 }
+//
+//        if isLeaningForward && heelDropped {
+//            detectedFallMessage = "🚨 Forward Lean Detected"
+//            triggerAlertFeedback()
+//            autoClearFallMessage()
+//        } else if isLeaningBackward && toeDropped {
+//            detectedFallMessage = "🚨 Backward Lean Detected"
+//            triggerAlertFeedback()
+//            autoClearFallMessage()
+//        }
+//    }
     
     func triggerAlertFeedback() {
         let generator = UINotificationFeedbackGenerator()
