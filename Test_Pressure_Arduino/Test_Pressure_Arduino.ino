@@ -12,6 +12,8 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 
+#define VBATPIN A13
+
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
@@ -28,6 +30,7 @@ bool calibrating = false, calibrated = false;
 unsigned long calibrationStartTime = 0;
 int calibratedMaxValues[8] = {0};
 int calibratedMinValues[8] = {4095};
+int frontThreshold = 0, backThreshold = 0;
 
 const int historySize = 5;
 int pressureHistory[historySize] = {0};
@@ -112,6 +115,8 @@ void updateCalibration() {
 class MyCallbacks : public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
         std::string value = std::string(pCharacteristic->getValue().c_str());
+        Serial.print("RECEIVED: ");
+        Serial.println(value.c_str());
 
         if (value == "FRONT") {
             Serial.println("FRONT Motor ON");
@@ -136,6 +141,26 @@ class MyCallbacks : public BLECharacteristicCallbacks {
           for (int i = 0; i < 8; i++) {
             calibratedMaxValues[i] = 0;
           }
+        } else if (value.find("SENSITIVITY") == 0) {
+          // Split by commas
+          int index1 = value.find(",");
+          int index2 = value.find(",", index1 + 1);
+          
+          if (index1 != std::string::npos && index2 != std::string::npos) {
+              std::string type = value.substr(index1 + 1, index2 - index1 - 1);
+              std::string valStr = value.substr(index2 + 1);                    
+
+              float val = atoi(valStr.c_str());
+
+              if (type == "FORWARD") {
+                  frontThreshold = val;
+                  Serial.printf("🔧 Forward threshold set to %d\n", frontThreshold);
+              } else if (type == "BACKWARD") {
+                  backThreshold = val;
+                  Serial.printf("🔧 Backward threshold set to %d\n", backThreshold);
+              } 
+          }
+          return;
         }
 
         else {
@@ -160,19 +185,22 @@ void detectLean() {
   float toePressure = (v[2] + v[4] + v[6]) / 3.0;
   float leanRatio = toePressure / (heelPressure + toePressure + 1e-5);
 
-  bool toePressed = (v[2] > calibratedMaxValues[2] * 0.6) ||
-                    (v[4] > calibratedMaxValues[4] * 0.6) ||
-                    (v[6] > calibratedMaxValues[6] * 0.6);
+  float frontMultiplier = 1.15 + (0.2 * frontThreshold / 50.0);
+  float backMultiplier = 1.15 + (0.2 * backThreshold / 50.0);
+
+  bool toePressed = (v[2] > calibratedMaxValues[2] * frontMultiplier) ||
+                    (v[4] > calibratedMaxValues[4] * frontMultiplier) ||
+                    (v[6] > calibratedMaxValues[6] * frontMultiplier);
   bool heelDropped = (v[0] < calibratedMaxValues[0] * 0.4) &&
                      (v[1] < calibratedMaxValues[1] * 0.4);
 
-  bool heelPressed = (v[0] > calibratedMaxValues[0] * 0.9) &&
-                     (v[1] > calibratedMaxValues[1] * 0.9);
-  bool toeDropped = (v[2] < calibratedMaxValues[2] * 0.3) &&
-                    (v[4] < calibratedMaxValues[4] * 0.3) &&
-                    (v[6] < calibratedMaxValues[6] * 0.3);
+  bool heelPressed = (v[0] > calibratedMaxValues[0] * backMultiplier) &&
+                     (v[1] > calibratedMaxValues[1] * backMultiplier);
+  bool toeDropped = (v[2] <= calibratedMaxValues[2] * 0.5) &&
+                    (v[4] <= calibratedMaxValues[4] * 0.5) &&
+                    (v[6] <= calibratedMaxValues[6] * 0.5);
 
-  if (leanRatio > 0.7 || (toePressed && heelDropped)) {
+  if ((toePressed && heelDropped)) {
     Serial.println("Leaning Forward !!!");
     turnMotorOn(motorFront);
     turnMotorOff(motorBack);
@@ -228,12 +256,22 @@ void setup() {
   pAdvertising->setMinPreferred(0x12);
   BLEDevice::startAdvertising();
 
-  // turnMotorOn(motorFront);
-  // turnMotorOn(motorBack);
+}
+
+void checkBattery () {
+  float measuredvbat = analogRead(VBATPIN);
+  measuredvbat = (measuredvbat * 2 * 3.3) / 4096;  // voltage calculation
+
+  char batteryMessage[32];
+  snprintf(batteryMessage, sizeof(batteryMessage), "Batterylevel %.2f", measuredvbat);
+
+  sendStringBLE(batteryMessage);  // Send formatted string over BLE
+  Serial.printf("VBat: %.1f V\n", measuredvbat);  // Print to serial for debug
 }
 
 void loop() {
   readSensors();
+  if (deviceConnected) checkBattery();
 
   std::string sensorData = "";
   for (int i = 0; i < 8; i++) {
